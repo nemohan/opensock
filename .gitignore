@@ -1,0 +1,5 @@
+*.log
+*.pid
+pkg/
+src/github.com/
+src/sourcegraph.com/
