@@ -1,14 +1,26 @@
 package utility
-
+import (
+	"sync/atomic"
+)
 type LogContext struct {
 	id uint32
 	*LogModule
 	handle *LogModule
 }
 
-//NewLogContext create a new log context
+var logID uint32
+
+
+//NewLogContext create a new log context, it will create a unique id when the argument id is 0
 func NewLogContext(id uint32, log *LogModule) *LogContext {
+	if id == 0{
+		id = atomic.AddUint32(&logID, 1)
+	}
 	return &LogContext{id, log, log}
+}
+
+func (l *LogContext) GetID()uint32{
+	return l.id
 }
 
 

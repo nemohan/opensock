@@ -14,7 +14,8 @@ type DataBuffer struct {
 	dataLen int
 }
 type Connection struct {
-	conn          *net.TCPConn
+	//conn          *net.TCPConn
+	conn 		  net.Conn
 	rbuf          *DataBuffer
 	wbuf          *DataBuffer
 	addr          string
@@ -22,7 +23,8 @@ type Connection struct {
 	state         int
 	enableEncrypt bool
 	log           *utility.LogContext
-	session       *core.Session
+	//session       *core.Session
+	session 	  core.Session
 	recvTimeout   time.Duration
 	protocol      core.Protocol
 	closeSignal   chan bool
@@ -34,8 +36,8 @@ const (
 	DefaultRecvTimeout = 50
 )
 
-func NewConnection(conn *net.TCPConn, session *core.Session, log *utility.LogContext) *Connection {
-	conn.SetNoDelay(true)
+func NewConnection(conn net.Conn, session core.Session, log *utility.LogContext) *Connection {
+	//conn.SetNoDelay(true)
 	myConn := &Connection{
 		conn:        conn,
 		rbuf:        &DataBuffer{make([]byte, maxBufferSize), maxBufferSize, 0},
@@ -56,7 +58,7 @@ func (c *Connection) AddProtocol(protocol core.Protocol){
 	c.protocol = protocol
 }
 //SetSession set a new session
-func (c *Connection) SetSession(session *core.Session) {
+func (c *Connection) SetSession(session core.Session) {
 	c.session = session
 }
 
@@ -128,9 +130,11 @@ func (conn *Connection) IOHandler() {
 	onExit := func() {
 		conn.conn.Close()
 		conn.err = errors.New("")
+		/*
 		if conn.session.Clean != nil {
 			conn.session.Clean(conn.session.GetPrivData())
 		}
+		*/
 
 		log.LogInfo("client exit:%s ", conn.addr)
 	}
@@ -144,7 +148,7 @@ func (conn *Connection) IOHandler() {
 			conn.conn.SetReadDeadline(time.Now().Add(conn.recvTimeout))
 			rBytes, err := conn.conn.Read(rBuf.data[rBuf.dataLen:])
 			if nerr, ok := err.(net.Error); ok && nerr.Timeout() {
-				if !conn.handleReply(conn.session.Update(conn.session.GetPrivData())) {
+				if !conn.handleReply(conn.session.UpdateProc()){
 					return
 				}
 				continue
@@ -161,8 +165,7 @@ func (conn *Connection) IOHandler() {
 		left := rBuf.dataLen
 		totalDecode := 0
 		for left > 0 {
-			//decodeLen, frame, err := conn.session.Decode(rBuf.data[totalDecode:rBuf.dataLen], conn.session.GetPrivData())
-			decodeLen, resp, err := conn.protocol.Input(rBuf.data[totalDecode:rBuf.dataLen])
+			decodeLen, resp, err := conn.session.ReadProc(rBuf.data[totalDecode:rBuf.dataLen])
 			log.LogDebug("decode len:%d", decodeLen)
 			if err != nil {
 				log.LogWarn("Decode error on connection:%s err:%s", conn.addr, err.Error())
