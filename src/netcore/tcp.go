@@ -13,6 +13,7 @@ func TcpServer(addr string, port int, log *utility.LogContext, clientInitHandler
 	if err != nil{
 		panic(err.Error())
 	}
+	log.LogInfo("listen on addr:%s sucessfully", servAddr.String())
 	defer utility.CatchPanic(log, nil)
 	for {
 		conn, err := listener.Accept()

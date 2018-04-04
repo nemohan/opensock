@@ -69,14 +69,12 @@ func (u *Upstream) RecvMsg()([]byte, error){
 			buf.Write(msg)
 			size += len(msg)
 		default:
-			//u.log.LogDebug("recv from upstream timeout")
 			more = false
 		}
 	}
 	if size == 0{
 		return nil, errTimeout
 	}
-	//u.log.LogDebug("msg:%v", buf.Bytes()[:size])
 	return buf.Bytes()[:size], nil
 }
 
